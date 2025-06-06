@@ -1,3 +1,5 @@
+const undoBtn = document.getElementById("undo-btn");
+const history = [];
 const saveBtn = document.getElementById("save");
 const textInput = document.getElementById("text");
 const fileInput = document.getElementById("file");
@@ -9,6 +11,7 @@ const colorOptions = Array.from(
 );
 const color = document.getElementById("color");
 const lineWidth = document.getElementById("line-width");
+const textSize = document.getElementById("text-size");
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 const CANVAS_WIDTH = 800;
@@ -99,7 +102,7 @@ function onDoubleClick(event){
     if (text !== "") {
         ctx.save();
         ctx.lineWidth = 1;
-        ctx.font = "68px sans-serif";
+        ctx.font = `${textSize.value}px sans-serif`;
         ctx.fillText(text, event.offsetX, event.offsetY);
         ctx.restore();
     }
@@ -111,6 +114,29 @@ function onSaveClick(){
     a.href = url;
     a.download = "myDrawing.png";
     a.click();
+}
+
+function saveCanvasState() {
+    history.push(canvas.toDataURL());
+    // 최대 저장 개수 제한 (선택 사항)
+    if (history.length > 20) history.shift(); // 가장 오래된 기록 삭제
+}
+
+function startPainting() {
+    saveCanvasState(); // 저장 후 그리기 시작
+    isPainting = true;
+}
+
+function onUndoClick() {
+    if (history.length === 0) return;
+
+    const previousDataUrl = history.pop();
+    const image = new Image();
+    image.src = previousDataUrl;
+    image.onload = function () {
+        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    };
 }
 
 canvas.addEventListener("dblclick", onDoubleClick);
@@ -127,3 +153,4 @@ destroyBtn.addEventListener("click", onDestoryClick);
 eraserBtn.addEventListener("click", onEraserClick);
 fileInput.addEventListener("change", onFileChange);
 saveBtn.addEventListener("click", onSaveClick);
+undoBtn.addEventListener("click", onUndoClick);
